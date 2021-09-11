@@ -102,11 +102,12 @@ def save_address(update, context):
             # Updates user's address to DB
             fauna_client.query(q.update(q.ref(
                 q.collection("users"), context.user_data["user_id"]), 
-                {"data": {"address": address["address"], "latitude": address["latitude"], "city": address['longitude']}}
+                {"data": {"address": address["address"], "latitude": address["latitude"], "longitude": address['longitude']}}
             ))
 
             msg = f"{address['address']}\n\nAddress saved."
             context.bot.send_message(chat_id=chat_id, text=msg)
+            return ConversationHandler.END
         
         else:
 
