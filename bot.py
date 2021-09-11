@@ -1,9 +1,8 @@
-from dominos import api
-import telegram
+import os
 
-from dominos.api import DominosNGClient
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ( Updater, 
+from commands import *
+from logging import error
+from telegram.ext import (
     CommandHandler, 
     MessageHandler, 
     ConversationHandler, 
@@ -13,88 +12,57 @@ from telegram.ext import ( Updater,
 
 
 
-telegram_bot_token = "1999242546:AAGVFTQy19ouCD1eFTtd4V4IYqmf6fL2Q7A"
 
-
-client = DominosNGClient()
-
-updater = Updater(token=telegram_bot_token, use_context=True)
-dispatcher = updater.dispatcher
-
-
-
-def start(update, context):
-    '''
-    This function receives the user's details and sends a welcome message
-    '''
-    chat_id = update.effective_chat.id
-    username = update["message"]["chat"]["username"]
-    first_name = update["message"]["chat"]["first_name"]
-    last_name = update["message"]["chat"]["last_name"]
-
-    """
-    latitude = update.message.location.latitude
-    longitude = update.message.location.longitude
-    print(longitude, latitude)
-    """
-    msg = f"Hello {first_name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria. My name is John and i'll be your botler"
-    context.bot.send_message(chat_id=chat_id, text=msg)
-
-def location(update, context):
-
-    chat_id = update.effective_chat.id
-    location = update.message.location
-    stores = client.findNearbyStoresFromLocation(location.latitude, location.longitude)
-
-    
-
-    for store in stores:
-
-        if store['IsDeliveryStore']=="true":
-
-            keyboard = [
-                InlineKeyboardButton("Delivery", callback_data=f"Delivery_{store['StoreID']}"),
-                InlineKeyboardButton("Carryout", callback_data=f"Carryout_{store['StoreID']}")
+def main():
+    address_conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("set_address", set_address)],
+        states={
+            SAVE_ADDRESS: [
+                MessageHandler(
+                    Filters.all, save_address
+                )
             ]
+        
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+        allow_reentry=True
+    )
 
-        keyboard = [
-                InlineKeyboardButton("Carryout", callback_data=f"Carryout_{store['StoreID']}")
-        ]
+    order_conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start_order", start_order)],
+        states={
+            ADDRESS_OR_LOCATION: [
+                CallbackQueryHandler(address_or_location)
+            ],
+            FIND_STORES: [
+                MessageHandler(Filters.location, location)
+            ]
+        
+        },
+        fallbacks=[CommandHandler('cancel', cancel)],
+        allow_reentry=True
+    )
 
-        reply_markup = InlineKeyboardMarkup([keyboard])
-
-        msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
-        context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
-
-def button(update, context):
-    chat_id = update.effective_chat.id
-    query = update.callback_query
-
-    query.answer()
-    
-    # This will define which button the user tapped on (from what you assigned to "callback_data". As I assigned them "1" and "2"):
-    choice = query.data
-
-    if "Delivery" in choice or "Carryout" in choice:
-        choice = choice.split('_')
-        order_type = choice[0]
-        store_id = choice[1]
-
-        context.bot.send_message(chat_id=chat_id, text = f"{order_type} {store_id}")
-
-    
-
-
-def find_stores(update, context):
-    pass
-    
+    PORT = int(os.environ.get('PORT', 5000))
 
 
 
 
-dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(MessageHandler(Filters.location, location))
-dispatcher.add_handler(CommandHandler("find_stores", find_stores))
-dispatcher.add_handler(CallbackQueryHandler(button))
+    dispatcher.add_handler(address_conv_handler)
+    dispatcher.add_handler(order_conv_handler)
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(None, common_message))
+    dispatcher.add_handler(CallbackQueryHandler(button))
 
-updater.start_polling()
+    dispatcher.add_error_handler(error)
+
+    #updater.start_polling()
+    updater.start_webhook(listen="0.0.0.0",
+                          port=int(PORT),
+                          url_path=os.getenv("TELEGRAM_BOT_TOKEN"))
+    updater.bot.setWebhook('https://yourherokuappname.herokuapp.com/' + os.getenv("TELEGRAM_BOT_TOKEN"))
+
+    updater.idle()
+
+if __name__ == '__main__':
+    main()

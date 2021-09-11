@@ -29,7 +29,7 @@ class DominosNGClient:
 
         resp = json.loads(r.text)
 
-        return resp['Addresses'] if resp['Addresses'] else False
+        return resp['Addresses'] if resp['Addresses'] else None
 
     def findNearbyStoresFromLocation(self, latitude, longitude):
 
@@ -55,9 +55,6 @@ class DominosNGClient:
 
         return resp["Stores"][:5]
      
-
-
-
     def findNearbyStoresFromAddress(self, ordertype, streetNo, streetName, city, DeliveryInstructions, AddressType, Neighbourhood="N/A", LocationName=None, UnitNumber=None):
 
         url = urls.URLS['GetStores']
@@ -98,9 +95,47 @@ class DominosNGClient:
 
         return resp["Stores"][:5]
 
+    def storemenu(self, store_id):
+
+        url = urls.URLS['GetStoreMenu'] % store_id
+        print(url)
+
+        payload = {
+            "lang" : "en",
+            "includeAssets" : "true"
+        }
+        
+        try:
+            r = requests.get(url, params=payload, timeout=10)
+        except Exception as e:
+            raise e
+
+
+        resp = json.loads(r.text)
+        return resp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 """
+
+
 client = DominosNGClient()
-# print(client.findAddress(4,'Charity Rd', 'Lagos'))
+print(client.findAddress("Providence Street", 'Lagos'))
 
 
 print(client.findNearbyStores(
