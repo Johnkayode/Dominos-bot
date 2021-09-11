@@ -1,7 +1,7 @@
 import os
 
 from commands import *
-from logging import error
+from logger import error
 from telegram.ext import (
     CommandHandler, 
     MessageHandler, 
