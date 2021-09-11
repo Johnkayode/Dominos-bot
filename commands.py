@@ -107,17 +107,19 @@ def save_address(update, context):
 
             msg = f"{address['address']}\n\nAddress saved."
             context.bot.send_message(chat_id=chat_id, text=msg)
-            return ConversationHandler.END
+            
         
         else:
 
-            context.bot.send_message(chat_id=chat_id, text="Address Not Found, Try another address")
-            return SAVE_ADDRESS
+            context.bot.send_message(chat_id=chat_id, text="Address Not Found. Try setting another address.")
+            
 
 
     except:
-        context.bot.send_message(chat_id=chat_id, text="Address Not Found, Try another address")
-        return SAVE_ADDRESS
+        context.bot.send_message(chat_id=chat_id, text="Address Not Found. Try setting another address")
+        
+
+    return ConversationHandler.END
 
 def start_order(update, context):
     chat_id = update.effective_chat.id

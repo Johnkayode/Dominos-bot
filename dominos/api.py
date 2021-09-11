@@ -53,7 +53,7 @@ class DominosNGClient:
 
         resp = json.loads(r.text)
 
-        return resp["Stores"][:5]
+        return resp["Stores"][:3]
      
     def findNearbyStoresFromAddress(self, ordertype, streetNo, streetName, city, DeliveryInstructions, AddressType, Neighbourhood="N/A", LocationName=None, UnitNumber=None):
 
