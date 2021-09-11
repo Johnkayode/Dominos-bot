@@ -43,7 +43,7 @@ def main():
         allow_reentry=True
     )
 
-    PORT = int(os.environ.get('PORT', 80))
+    PORT = int(os.environ.get('PORT', '8443'))
 
 
 
