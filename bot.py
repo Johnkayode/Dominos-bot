@@ -59,9 +59,9 @@ def main():
     #updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
                           port=int(PORT),
-                          url_path=os.getenv("TELEGRAM_BOT_TOKEN"))
-    updater.bot.setWebhook('https://dominos-order-bot.herokuapp.com/' + os.getenv("TELEGRAM_BOT_TOKEN"))
-
+                          url_path=os.getenv("TELEGRAM_BOT_TOKEN"),
+                          webhook_url='https://dominos-order-bot.herokuapp.com/' + os.getenv("TELEGRAM_BOT_TOKEN")
+                        )
     updater.idle()
 
 if __name__ == '__main__':
