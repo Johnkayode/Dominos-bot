@@ -23,10 +23,10 @@ def geocode(address):
     if resp['results']:
 
         return {
-            "address": resp['results']['formatted_address'],
-            "latitude": resp['results']['geometry']['location']['lat'],
-            "longitude": resp['results']['geometry']['location']['lng']
+            "address": resp['results'][0]['formatted_address'],
+            "latitude": resp['results'][0]['geometry']['location']['lat'],
+            "longitude": resp['results'][0]['geometry']['location']['lng']
         }
 
     return None
-        
+
