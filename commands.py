@@ -12,7 +12,8 @@ from telegram import (
     ReplyKeyboardMarkup, 
     InlineKeyboardButton, 
     InlineKeyboardMarkup, 
-    ReplyKeyboardRemove
+    ReplyKeyboardRemove,
+    replymarkup
 )
 
 from telegram.ext import ( Updater,  
@@ -35,7 +36,7 @@ dispatcher = updater.dispatcher
 
 
 
-SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES = range(3)
+CONFIRM_ADDRESS, SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES = range(4)
 
 
 
@@ -67,7 +68,13 @@ def start(update, context):
 
     context.user_data["user_id"] = user["ref"].id()
 
-    msg = f"Hello {name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria. My name is John and i'll be your botler\n\n/set_address To set your address\n/start_order To start order\n/cart To view your cart items\n/update_address To update address details\n/recent_orders To get your recent orders"
+    msg = f"Hello {name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria"
+    "My name is John and i'll be your botler\n\n"
+    "/set_address To set your address\n"
+    "/start_order To start order\n"
+    "/cart To view your cart items\n"
+    "/update_address To update address details\n"
+    "/recent_orders To get your recent orders"
 
     context.bot.send_message(chat_id=chat_id, text=msg)
 
@@ -83,42 +90,82 @@ def set_address(update, context):
 
     return SAVE_ADDRESS
 
-def save_address(update, context):
+def confirm_address(update, context):
     '''
-    This function receives the user's address and confirms with the Dominos API
-    If confirmed, it saves the user's address
+    This function receives the user's address and checks with Google API.
+    Then asks user to confirm the address
     '''
 
     chat_id = update.effective_chat.id
     address = update.message.text
 
+
     try:
 
-        # Confirms address
+        # Check address with Google API
         address = geocode(address)
 
         if address:
 
-            # Updates user's address to DB
-            fauna_client.query(q.update(q.ref(
-                q.collection("users"), context.user_data["user_id"]), 
-                {"data": {"address": address["address"], "latitude": address["latitude"], "longitude": address['longitude']}}
-            ))
+            # Asks user to confirm
 
-            msg = f"{address['address']}\n\nAddress saved."
+            msg = f"{address['address']}\n\nIs this your address. (YES/NO)?"
+            context.user_data['address'] = address['address']
+            context.user_data['latitude'] = address['latitude']
+            context.user_data['longitude'] = address['longitude']
+
+            reply_keyboard = [['YES','NO']]
+            markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
             context.bot.send_message(chat_id=chat_id, text=msg)
+
+            return SAVE_ADDRESS
             
         
         else:
 
             context.bot.send_message(chat_id=chat_id, text="Address Not Found. Try setting another address.")
-            
+            return ConversationHandler.END
 
 
     except:
         context.bot.send_message(chat_id=chat_id, text="Address Not Found. Try setting another address")
-        
+        return ConversationHandler.END
 
+
+def save_address(update, context):
+    '''
+    If the user's address is confirmed, it is saved to the DB
+    '''
+
+    chat_id = update.effective_chat.id
+    choice = update.message.text
+
+    address = context.user_data['address']
+    latitude = context.user_data['latitude']
+    longitude = context.user_data['longitude']
+
+    if choice.lower() == 'yes':
+
+        # Updates user's address to DB
+        fauna_client.query(q.update(q.ref(
+            q.collection("users"), context.user_data["user_id"]), 
+            {
+                "data": {
+                    "address": address, 
+                    "latitude": latitude, 
+                    "longitude": longitude
+                }
+            }
+        ))
+
+        msg = "Your address has been saved."
+            
+    elif choice.lower() == 'no':
+        msg = "Your address wasn't found, try another address keyword"
+    else:
+        msg = "Unrecognized reply. Try YES or NO"
+
+    context.bot.send_message(chat_id=chat_id, text=msg, reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 def start_order(update, context):
@@ -167,7 +214,9 @@ def address_or_location(update, context):
 
                 reply_markup = InlineKeyboardMarkup([keyboard])
 
-                msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
+                msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}"
+                "\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"
+                "\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
         
         else:
@@ -176,8 +225,8 @@ def address_or_location(update, context):
        
     elif update.callback_query.data.lower() == "current location":
 
-        msg = "Send your current location\n\n\
-            Don't know how to send location? Check here: https://telegram.org/blog/live-locations"
+        msg = "Send your current location\n\n"
+        "Don't know how to send location? Check here: https://telegram.org/blog/live-locations"
         context.bot.send_message(chat_id=chat_id, text=msg)
         return FIND_STORES
 

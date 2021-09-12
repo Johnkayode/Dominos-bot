@@ -17,6 +17,11 @@ def main():
     address_conv_handler = ConversationHandler(
         entry_points=[CommandHandler("set_address", set_address)],
         states={
+            CONFIRM_ADDRESS: [
+                MessageHandler(
+                    Filters.all, confirm_address
+                )
+            ],
             SAVE_ADDRESS: [
                 MessageHandler(
                     Filters.all, save_address
