@@ -68,12 +68,12 @@ def start(update, context):
 
     context.user_data["user_id"] = user["ref"].id()
 
-    msg = f"Hello {name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria"
-    "My name is John and i'll be your botler\n\n"
-    "/set_address To set your address\n"
-    "/start_order To start order\n"
-    "/cart To view your cart items\n"
-    "/update_address To update address details\n"
+    msg = f"Hello {name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria"\
+    "My name is John and i'll be your botler\n\n"\
+    "/set_address To set your address\n"\
+    "/start_order To start order\n"\
+    "/cart To view your cart items\n"\
+    "/update_address To update address details\n"\
     "/recent_orders To get your recent orders"
 
     context.bot.send_message(chat_id=chat_id, text=msg)
@@ -84,11 +84,31 @@ def set_address(update, context):
     '''
 
     chat_id = update.effective_chat.id
-    msg = "Type your address in this format: [Street number], [Street name], [City]\nE.g 49, Kunle Street, Lagos"
+
+    name = update.message.chat.first_name or update.message.chat.username
+
+    try:
+        user = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
+    except:
+        user = fauna_client.query(q.create(q.collection("users"), {
+            "data": {
+                "id": chat_id,
+                "name": name,
+                "address": "",
+                "latitude": "",
+                "longitude": "",
+                "date": datetime.now(pytz.UTC)
+            }
+        }))
+
+    context.user_data["user_id"] = user["ref"].id()
+
+    msg = "Type your address in this format: [Street number], [Street name], [City]\n"\
+    "E.g 49, Kunle Street, Lagos"
 
     context.bot.send_message(chat_id=chat_id, text=msg)
 
-    return SAVE_ADDRESS
+    return CONFIRM_ADDRESS
 
 def confirm_address(update, context):
     '''
@@ -115,8 +135,8 @@ def confirm_address(update, context):
             context.user_data['longitude'] = address['longitude']
 
             reply_keyboard = [['YES','NO']]
-            markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
-            context.bot.send_message(chat_id=chat_id, text=msg)
+            markup = ReplyKeyboardMarkup(reply_keyboard)
+            context.bot.send_message(chat_id=chat_id, text=msg, reply_markup=markup)
 
             return SAVE_ADDRESS
             
@@ -131,7 +151,6 @@ def confirm_address(update, context):
         context.bot.send_message(chat_id=chat_id, text="Address Not Found. Try setting another address")
         return ConversationHandler.END
 
-
 def save_address(update, context):
     '''
     If the user's address is confirmed, it is saved to the DB
@@ -139,6 +158,7 @@ def save_address(update, context):
 
     chat_id = update.effective_chat.id
     choice = update.message.text
+
 
     address = context.user_data['address']
     latitude = context.user_data['latitude']
@@ -214,8 +234,8 @@ def address_or_location(update, context):
 
                 reply_markup = InlineKeyboardMarkup([keyboard])
 
-                msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}"
-                "\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"
+                msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}"\
+                "\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
                 "\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
         
@@ -258,7 +278,9 @@ def location(update, context):
 
         reply_markup = InlineKeyboardMarkup([keyboard])
 
-        msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
+        msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}"\
+        "\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
+        "\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
         context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
 
 def button(update, context):
