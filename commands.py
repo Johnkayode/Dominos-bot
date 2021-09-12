@@ -68,7 +68,7 @@ def start(update, context):
 
     context.user_data["user_id"] = user["ref"].id()
 
-    msg = f"Hello {name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria"\
+    msg = f"Hello {name},\nWelcome to the unofficial bot for Domino's Pizza Nigeria.\n"\
     "My name is John and i'll be your botler\n\n"\
     "/set_address To set your address\n"\
     "/start_order To start order\n"\
@@ -235,8 +235,8 @@ def address_or_location(update, context):
                 reply_markup = InlineKeyboardMarkup([keyboard])
 
                 msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}"\
-                "\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
-                "\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
+                f"\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
+                f"\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
         
         else:
@@ -279,8 +279,8 @@ def location(update, context):
         reply_markup = InlineKeyboardMarkup([keyboard])
 
         msg = f"{store['StoreName']}\n{store['StreetName']}, {store['City']}\n{store['Phone']}"\
-        "\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
-        "\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
+        f"\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
+        f"\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
         context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
 
 def button(update, context):
