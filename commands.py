@@ -239,7 +239,7 @@ def address_or_location(update, context):
                 f"\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
                 f"\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
-                return MENU
+            return MENU
 
 
             
