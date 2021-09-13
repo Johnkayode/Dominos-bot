@@ -17,7 +17,7 @@ from telegram import (
 )
 
 from telegram.ext import ( Updater,  
-    ConversationHandler, 
+    ConversationHandler, conversationhandler, 
 )
 
 from utils import geocode
@@ -36,7 +36,7 @@ dispatcher = updater.dispatcher
 
 
 
-CONFIRM_ADDRESS, SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES = range(4)
+CONFIRM_ADDRESS, SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES, MENU, SUBMENU = range(6)
 
 
 
@@ -215,6 +215,7 @@ def address_or_location(update, context):
         user = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
 
         if user['data']['address']:
+
             stores = client.findNearbyStoresFromLocation(user['data']['latitude'], user['data']['longitude'])
 
             for store in stores:
@@ -238,14 +239,18 @@ def address_or_location(update, context):
                 f"\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
                 f"\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
-        
+                return MENU
+
+
+            
         else:
             msg = "You don't have any saved address\n/set_address To save your address"
             context.bot.send_message(chat_id=chat_id, text=msg)
+            return ConversationHandler.END
        
     elif update.callback_query.data.lower() == "current location":
 
-        msg = "Send your current location\n\n"
+        msg = "Send your current location\n\n"\
         "Don't know how to send location? Check here: https://telegram.org/blog/live-locations"
         context.bot.send_message(chat_id=chat_id, text=msg)
         return FIND_STORES
@@ -253,6 +258,7 @@ def address_or_location(update, context):
     else:
 
         context.bot.send_message(chat_id=chat_id, text="Unrecognized Reply\n\n/start_order To start order")
+        return ConversationHandler.END
 
 def location(update, context):
 
@@ -282,8 +288,9 @@ def location(update, context):
         f"\n\nService Hours: \n\nDelivery: \n{store['ServiceHoursDescription']['Delivery']}"\
         f"\n\nCarryout: \n{store['ServiceHoursDescription']['Carryout']}"
         context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
+    return MENU
 
-def button(update, context):
+def menu(update, context):
     chat_id = update.effective_chat.id
     query = update.callback_query
 
@@ -296,9 +303,50 @@ def button(update, context):
         choice = choice.split('_')
         order_type = choice[0]
         store_id = choice[1]
+        context.user_data['store_id'] = store_id
 
         menu = client.storemenu(store_id)
-        context.bot.send_message(chat_id=chat_id, text = "Seen")
+
+        
+        productTypes = []
+        for key, product in menu['Products'].items():
+            productTypes.append(product.get('ProductType').upper())
+
+        
+        productTypes = list(set(productTypes))
+        for category in productTypes:
+            msg = f"{category.upper()}"
+            keyboard = [
+                InlineKeyboardButton("See Products", callback_data=f"CATEGORY_{category}"),
+            ]
+
+            reply_markup = InlineKeyboardMarkup([keyboard])
+            url = f'images/{category.lower()}.png'
+            if category.lower() == "papotas":
+                url = "images/sides.png"
+            context.bot.send_photo(chat_id=chat_id, photo=open(url, 'rb'), caption=msg, reply_markup=reply_markup)
+            
+        return SUBMENU
+        
+def sub_menu(update, context):
+    chat_id = update.callback_query.message.chat.id
+    choice = update.callback_query.data.split('_')
+    if choice[0] == 'CATEGORY':
+        category = choice[1]
+        store_id = context.user_data['store_id']
+        menu = client.storemenu(store_id)
+        
+        
+        
+        for key, item in menu['Products'].items():
+            if item.get('ProductType').upper() == category:
+                keyboard = [
+                        InlineKeyboardButton("Add To Cart", callback_data=f"{item['Code']}")
+                ]
+                msg = f"{item['Name']}\n{item['Description']}"
+                reply_markup = InlineKeyboardMarkup([keyboard])
+                context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
+
 
 
 # Control
