@@ -1,3 +1,3 @@
-# Domino's Pizzas Bot
+# Domino's Pizza Order Bot
 
-### A Telegram Bot-As-A-Service to order food from Domino's Pizzas Stores
+### A Telegram Bot-As-A-Service for ordering from Domino's Pizza Stores in Nigeria.
