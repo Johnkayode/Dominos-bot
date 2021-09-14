@@ -17,7 +17,7 @@ TELEGRAM_BOT_TOKEN=<your-telegram-bot-token>
 FAUNA_TOKEN=<your-fauna-key>
 GOOGLE_API_KEY=<google-api-key>
 ```
-Run the bot
+Edit the webhook url in the bot.py file and run the bot
 ```
 python bot.py
 ```
