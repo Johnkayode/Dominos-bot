@@ -357,9 +357,11 @@ def sub_menu(update, context):
         for key, item in menu['Products'].items():
             if item.get('ProductType').upper() == category:
                 keyboard = [
-                        InlineKeyboardButton("Add To Cart", callback_data=f"{item['Code']}")
+                        InlineKeyboardButton("Add To Cart", callback_data=f"{item.get('Code')}")
                 ]
-                msg = f"{item['Name']}\n{item['Description']}"
+                code = item.get('Code').split('_')[1] # get product code
+                price = menu['Variants'][code]['Price']
+                msg = f"{item['Name']}\n{item['Description']}\nPrice: NGN {price}"
                 reply_markup = InlineKeyboardMarkup([keyboard])
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
 
