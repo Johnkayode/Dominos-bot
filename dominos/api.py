@@ -12,6 +12,11 @@ class DominosNGClient:
 
     def findAddress(self, streetName, city):
 
+        '''
+        This methods searches and confirms the user address
+        '''
+
+
         url = urls.URLS['SearchAddress']
 
         payload = {
@@ -32,6 +37,9 @@ class DominosNGClient:
         return resp['Addresses'] if resp['Addresses'] else None
 
     def findNearbyStoresFromLocation(self, latitude, longitude):
+        '''
+        This method returns a list of nearby stores given the location's latitude and longitude 
+        '''
 
         url = urls.URLS['GetStores']
 
@@ -55,7 +63,17 @@ class DominosNGClient:
 
         return resp["Stores"][:3]
      
-    def findNearbyStoresFromAddress(self, ordertype, streetNo, streetName, city, DeliveryInstructions, AddressType, Neighbourhood="N/A", LocationName=None, UnitNumber=None):
+    def findNearbyStoresFromAddress(self, 
+                ordertype, 
+                streetNo, 
+                streetName, 
+                city, 
+                DeliveryInstructions, 
+                AddressType, 
+                Neighbourhood="N/A", 
+                LocationName=None, 
+                UnitNumber=None
+            ):
 
         url = urls.URLS['GetStores']
 
@@ -96,6 +114,9 @@ class DominosNGClient:
         return resp["Stores"][:5]
 
     def storemenu(self, store_id):
+        '''
+        This method returns the store menu
+        '''
 
         url = urls.URLS['GetStoreMenu'] % store_id
         print(url)

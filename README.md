@@ -2,6 +2,12 @@
 
 ### A Telegram Bot-As-A-Service for ordering from Domino's Pizza Stores in Nigeria.
 
+## Use
+1. Click here https://t.me/dominos_orderbot
+or search @dominos_orderbot on Telegram app.
+2. Then click the start button or use the /start command to start the bot.
+
+
 ## Installation 
 To begin installation git clone repo into preferred directory
 ```

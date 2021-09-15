@@ -189,6 +189,9 @@ def save_address(update, context):
     return ConversationHandler.END
 
 def start_order(update, context):
+    '''
+    This function starts the order converstaion
+    '''
     chat_id = update.effective_chat.id
     msg = "Do you want to use your saved address or current location ?"
     reply_keyboard = [
@@ -209,6 +212,9 @@ def start_order(update, context):
     return ADDRESS_OR_LOCATION
 
 def address_or_location(update, context):
+    '''
+    This function receives the user's location choice and returns the nearby stores
+    '''
 
     chat_id = update.callback_query.message.chat.id
     if update.callback_query.data.lower() == "saved address":
@@ -261,6 +267,9 @@ def address_or_location(update, context):
         return ConversationHandler.END
 
 def location(update, context):
+    '''
+    This function receives the user's current location and returns nearby stores
+    '''
 
     chat_id = update.effective_chat.id
     location = update.message.location
@@ -291,6 +300,9 @@ def location(update, context):
     return MENU
 
 def menu(update, context):
+    '''
+    This function returns the store menu
+    '''
     chat_id = update.effective_chat.id
     query = update.callback_query
 
@@ -312,8 +324,9 @@ def menu(update, context):
         for key, product in menu['Products'].items():
             productTypes.append(product.get('ProductType').upper())
 
-        
+    
         productTypes = list(set(productTypes))
+        
         for category in productTypes:
             msg = f"{category.upper()}"
             keyboard = [
@@ -329,6 +342,9 @@ def menu(update, context):
         return SUBMENU
         
 def sub_menu(update, context):
+    '''
+    This function returns a menu for a given category
+    '''
     chat_id = update.callback_query.message.chat.id
     choice = update.callback_query.data.split('_')
     if choice[0] == 'CATEGORY':
