@@ -359,9 +359,12 @@ def sub_menu(update, context):
                 keyboard = [
                         InlineKeyboardButton("Add To Cart", callback_data=f"{item.get('Code')}")
                 ]
-                code = item.get('Code').split('_')[1] # get product code
-                price = menu['Variants'][code]['Price']
-                msg = f"{item['Name']}\n{item['Description']}\nPrice: NGN {price}"
+                prices = "Variants\n"
+                for variant in item.get('Variants'):
+                    name = menu['Variants'][variant]['Name']
+                    price = menu['Variants'][variant]['Price']
+                    prices += f"{name} -- NGN {price}\n"
+                msg = f"{item['Name']}\n{item['Description']}\n\n{prices}"
                 reply_markup = InlineKeyboardMarkup([keyboard])
                 context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
 
