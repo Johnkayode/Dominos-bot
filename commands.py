@@ -366,7 +366,7 @@ def sub_menu(update, context):
                         InlineKeyboardButton("Add To Cart", callback_data=f"{product['ProductCode']}")
                     ]
                     msg = f"{name}\nNGN {price}"
-                    url = f"https://cache.dominos.com/olo/6_64_5/assets/build/market/NG/_en/images/img/products/larges/{variant['ProductCode']}.jpg"
+                    url = f"https://cache.dominos.com/olo/6_64_5/assets/build/market/NG/_en/images/img/products/larges/{product['ProductCode']}.jpg"
                     reply_markup = InlineKeyboardMarkup([keyboard])
                     context.bot.send_photo(chat_id=chat_id, photo=url, caption=msg, reply_markup=reply_markup)
 
