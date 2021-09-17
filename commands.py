@@ -356,17 +356,19 @@ def sub_menu(update, context):
         
         for key, item in menu['Products'].items():
             if item.get('ProductType').upper() == category:
-                keyboard = [
-                        InlineKeyboardButton("Add To Cart", callback_data=f"{item.get('Code')}")
-                ]
-                prices = "Variants\n"
+                
                 for variant in item.get('Variants'):
-                    name = menu['Variants'][variant]['Name']
-                    price = menu['Variants'][variant]['Price']
-                    prices += f"{name} -- NGN {price}\n"
-                msg = f"{item['Name']}\n{item['Description']}\n\n{prices}"
-                reply_markup = InlineKeyboardMarkup([keyboard])
-                context.bot.send_message(chat_id=chat_id, text = msg, reply_markup=reply_markup)
+                    product = menu['Variants'][variant]
+                    name = product['Name']
+                    price = product['Price']
+        
+                    keyboard = [
+                        InlineKeyboardButton("Add To Cart", callback_data=f"{variant['ProductCode']}")
+                    ]
+                    msg = f"{name}\nNGN {price}"
+                    url = f"https://cache.dominos.com/olo/6_64_5/assets/build/market/NG/_en/images/img/products/larges/{variant['ProductCode']}.jpg"
+                    reply_markup = InlineKeyboardMarkup([keyboard])
+                    context.bot.send_photo(chat_id=chat_id, photo=url, caption=msg, reply_markup=reply_markup)
 
 
 
