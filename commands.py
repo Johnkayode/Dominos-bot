@@ -36,6 +36,7 @@ dispatcher = updater.dispatcher
 
 
 
+
 CONFIRM_ADDRESS, SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES, MENU, SUBMENU = range(6)
 
 
@@ -365,16 +366,31 @@ def sub_menu(update, context):
                     keyboard = [
                         InlineKeyboardButton("Add To Cart", callback_data=f"{product['ProductCode']}")
                     ]
+
                     msg = f"{name}\nNGN {price}"
                     url = f"https://cache.dominos.com/olo/6_64_5/assets/build/market/NG/_en/images/img/products/larges/{product['ProductCode']}.jpg"
                     reply_markup = InlineKeyboardMarkup([keyboard])
                     context.bot.send_photo(chat_id=chat_id, photo=url, caption=msg, reply_markup=reply_markup)
 
 
+def add_to_cart(update, context):
+    '''
+    This function adds an item to the cart or increases its quantity
+    '''
+    chat_id = update.callback_query.message.chat.id
+    product_code = update.callback_query.data
+
+    
+    pass
+
+
+def view_cart(update, context):
+    '''
+    '''
+
+    pass
 
 # Control
-
-
 def cancel(update, context) -> int: 
     update.message.reply_text(
         'Cancelled.',

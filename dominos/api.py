@@ -135,6 +135,73 @@ class DominosNGClient:
         resp = json.loads(r.text)
         return resp
 
+    def addToCart(self, store_id, store_city, store_street, latitude, longitude, product_code):
+
+
+        payload =   {
+                        "Order": {
+                            "Address": {
+                                "Coordinates": {
+                                    "Latitude": latitude,
+                                    "Longitude": longitude
+                                },
+                                "StoreID": store_id,
+                                "City": store_city, #Labak estate
+                                "StreetName": store_street    #Old Abeokuta Road
+                            },
+                            "Coupons": [],
+                            "CustomerID": "",
+                            "Email": "",
+                            "Extension": "",
+                            "FirstName": "",
+                            "LastName": "",
+                            "LanguageCode": "en",
+                            "OrderChannel": "OLO",
+                            "OrderID": "",
+                            "OrderMethod": "Web",
+                            "OrderTaker": None,
+                            "Payments": [],
+                            "Phone": "",
+                            "PhonePrefix": "",
+                            "Products": [
+                                {
+                                    "Code": product_code,
+                                    "Qty": 1,
+                                    "ID": 1,
+                                    "isNew": True,
+                                    "Options": {
+                                        "D": {
+                                            "1/1": "1"
+                                        },
+                                        "C": {
+                                            "1/1": "1"
+                                        },
+                                        "I": {
+                                            "1/1": "1"
+                                        },
+                                        "M": {
+                                            "1/1": "1"
+                                        },
+                                        "N": {
+                                            "1/1": "1"
+                                        },
+                                        "X": {
+                                            "1/1": "1"
+                                        }
+                                    }
+                                }
+                            ],
+                            "ServiceMethod": "Carryout",
+                            "SourceOrganizationURI": "order.dominos.com",
+                            "StoreID":  store_id, #51819
+                            "Tags": {},
+                            "Version": "1.0",
+                            "NoCombine": True,
+                            "Partners": {},
+                            "HotspotsLite": False,
+                            "OrderInfoCollection": []
+                        }
+                    }
 
 
 
