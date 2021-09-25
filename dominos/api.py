@@ -113,6 +113,20 @@ class DominosNGClient:
 
         return resp["Stores"][:5]
 
+    def getStoreDetails(self, store_id):
+        '''
+        Find store details
+        '''
+        url =  urls.URLS['GetStoreDetails'] % store_id
+        
+        try:
+            r = requests.get(url, timeout=10)
+        except Exception as e:
+            raise e
+
+
+        resp = json.loads(r.text)
+
     def storemenu(self, store_id):
         '''
         This method returns the store menu
