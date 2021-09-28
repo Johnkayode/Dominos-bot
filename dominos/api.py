@@ -149,8 +149,9 @@ class DominosNGClient:
         resp = json.loads(r.text)
         return resp
 
-    def addToCart(self, store_id, store_city, store_street, latitude, longitude, product_code):
+    def addToCart(self, store_id, store_city, store_street, latitude, longitude, products, order_type):
 
+        url = urls.URLS['AddToCart']
 
         payload =   {
                         "Order": {
@@ -177,35 +178,8 @@ class DominosNGClient:
                             "Payments": [],
                             "Phone": "",
                             "PhonePrefix": "",
-                            "Products": [
-                                {
-                                    "Code": product_code,
-                                    "Qty": 1,
-                                    "ID": 1,
-                                    "isNew": True,
-                                    "Options": {
-                                        "D": {
-                                            "1/1": "1"
-                                        },
-                                        "C": {
-                                            "1/1": "1"
-                                        },
-                                        "I": {
-                                            "1/1": "1"
-                                        },
-                                        "M": {
-                                            "1/1": "1"
-                                        },
-                                        "N": {
-                                            "1/1": "1"
-                                        },
-                                        "X": {
-                                            "1/1": "1"
-                                        }
-                                    }
-                                }
-                            ],
-                            "ServiceMethod": "Carryout",
+                            "Products": products,
+                            "ServiceMethod": order_type,
                             "SourceOrganizationURI": "order.dominos.com",
                             "StoreID":  store_id, #51819
                             "Tags": {},
@@ -217,10 +191,22 @@ class DominosNGClient:
                         }
                     }
 
+        
+        headers = {
+            "DPZ-Language" : "en",
+            "DPZ-Market": "NIGERIA",
+            "Host":"order.golo02.dominos.com"
+        }
+        
+        try:
+            r = requests.get(url, params=payload, headers=headers, timeout=10)
+        except Exception as e:
+            raise e
 
 
+        resp = json.loads(r.text)
 
-
+        return resp['OrderID']
 
 
 

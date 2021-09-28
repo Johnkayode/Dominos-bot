@@ -2,6 +2,8 @@ import os
 import pytz
 
 from datetime import datetime
+
+from requests.api import options
 from dominos.api import DominosNGClient
 from dotenv import load_dotenv
 
@@ -224,6 +226,9 @@ def address_or_location(update, context):
         if user['data']['address']:
 
             stores = client.findNearbyStoresFromLocation(user['data']['latitude'], user['data']['longitude'])
+            
+            context.user_data['latitude'] = user['data']['latitude']
+            context.user_data['longitude'] = user['data']['longitude']
 
             for store in stores:
 
@@ -274,6 +279,8 @@ def location(update, context):
 
     chat_id = update.effective_chat.id
     location = update.message.location
+    context.user_data['latitude'] = location.latitude
+    context.user_data['longitude'] = location.longitude
     stores = client.findNearbyStoresFromLocation(location.latitude, location.longitude)
 
     
@@ -307,6 +314,9 @@ def menu(update, context):
     chat_id = update.effective_chat.id
     query = update.callback_query
 
+    user = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
+    context.user_data["user_id"] = user["ref"].id()
+
     query.answer()
     
     # This will define which button the user tapped on (from what you assigned to "callback_data"):
@@ -316,6 +326,7 @@ def menu(update, context):
         choice = choice.split('_')
         order_type = choice[0]
         store_id = choice[1]
+        context.user_data['order_type'] = order_type
         context.user_data['store_id'] = store_id
 
         menu = client.storemenu(store_id)
@@ -379,9 +390,101 @@ def add_to_cart(update, context):
     '''
     chat_id = update.callback_query.message.chat.id
     product_code = update.callback_query.data
+    store_id = context.user_data['store_id']
+    order_type = context.user_data['order_type'] or 'Carryout'
+
+    store = client.getStoreDetails(store_id)
+    streetName = store['streetName']
+    city = store['city']
+
+    try:
+        latitude = context.user_data['latitude']
+        longitude = context.user_data['longitude']
+    except:
+        user = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
+        latitude = user['data']['latitude']
+        longitude = user['data']['longitude']
+
+    '''
+    options = {
+        "D": {
+            "1/1": "1"
+        },
+        "C": {
+            "1/1": "1"
+        },
+        "I": {
+            "1/1": "1"
+        },
+        "M": {
+            "1/1": "1"
+        },
+        "N": {
+            "1/1": "1"
+        },
+        "X": {
+            "1/1": "1"
+        }
+    }
+    '''
+    options = {}
+
+
+    try:
+        cart = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
+    except:
+        cart = fauna_client.query(q.create(q.collection("cart"), {
+            "data": {
+                "id": chat_id,
+                "products": [],
+                "order_id" : "",
+                "date": datetime.now(pytz.UTC)
+            }
+        }))
+
+    cart = cart.data.products
+    new_product = {
+            "Code": product_code,
+            "Qty": 1,
+            "ID": 1,
+            "isNew": True,
+            "Options": options
+        }
+
+    # Checks if product is already in cart
+    for product in cart:
+        if product['Code'] == new_product['Code']:
+            product['Qty'] += 1
+            break
+    else:
+        cart.append(new_product)
 
     
-    pass
+
+
+    order_id = client.addToCart(
+                store_id=store_id, 
+                store_city=city, 
+                store_street=streetName, 
+                latitude=latitude, 
+                longitude=longitude, 
+                products=cart,
+                order_type=order_type,
+                options=options
+            )
+
+    fauna_client.query(q.update(q.ref(
+            q.collection("cart"), context.user_data["user_id"]), 
+            {
+                "data": {
+                    "products": cart, 
+                    "order_id": order_id
+                }
+            }
+    ))
+
+    msg =  f'Product Added\n\nOrder ID: {order_id}'
+    context.bot.send_message(chat_id=chat_id, text = msg)
 
 
 def view_cart(update, context):
