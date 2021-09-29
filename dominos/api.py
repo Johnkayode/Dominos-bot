@@ -1,6 +1,7 @@
+# from . import urls
 from . import urls
 
-
+import fake_useragent
 import json
 import requests
 
@@ -8,6 +9,7 @@ class DominosNGClient:
 
     def __init__(self):
         self.session = requests.session
+        self.user_agent = fake_useragent.UserAgent().chrome
         pass
 
     def findAddress(self, streetName, city):
@@ -151,7 +153,7 @@ class DominosNGClient:
         resp = json.loads(r.text)
         return resp
 
-    def addToCart(self, store_id, store_city, store_street, latitude, longitude, products, order_type):
+    def addToCart(self, store_id, store_city, store_street, latitude, longitude, products, orderID , order_type):
 
         url = urls.URLS['AddToCart']
 
@@ -174,7 +176,7 @@ class DominosNGClient:
                             "LastName": "",
                             "LanguageCode": "en",
                             "OrderChannel": "OLO",
-                            "OrderID": "",
+                            "OrderID": orderID,
                             "OrderMethod": "Web",
                             "OrderTaker": None,
                             "Payments": [],
@@ -193,21 +195,22 @@ class DominosNGClient:
                         }
                     }
 
+       
         
         headers = {
             "DPZ-Language" : "en",
             "DPZ-Market": "NIGERIA",
-            "Host":"order.golo02.dominos.com"
+            "Host":"order.golo02.dominos.com",
+            "User-Agent": self.user_agent
         }
         
         try:
-            r = requests.get(url, params=payload, headers=headers, timeout=10)
+            r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=10)
         except Exception as e:
             raise e
 
 
-        resp = json.loads(r.text)
-        print(resp)
+        resp = json.loads(r.text, strict=False)
         return resp['Order']['OrderID']
 
 
@@ -235,4 +238,3 @@ print(client.findNearbyStores(
 ))
 
 """
-

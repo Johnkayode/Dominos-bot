@@ -469,7 +469,7 @@ def add_to_cart(update, context):
 
     
 
-
+    orderID = context.user_data.get('orderID',"")
     order_id = client.addToCart(
                 store_id=store_id, 
                 store_city=city, 
@@ -477,8 +477,11 @@ def add_to_cart(update, context):
                 latitude=latitude, 
                 longitude=longitude, 
                 products=cart,
+                orderID=orderID,
                 order_type=order_type,
             )
+
+    context.user_data['orderID'] = order_id
 
     fauna_client.query(q.update(q.ref(
             q.collection("cart"), ref), 
@@ -511,7 +514,6 @@ def cancel(update, context) -> int:
 
 def common_message(update, context):
     pass
-
 
 
 
