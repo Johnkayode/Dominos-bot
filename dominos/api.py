@@ -127,6 +127,8 @@ class DominosNGClient:
 
         resp = json.loads(r.text)
 
+        return resp
+
     def storemenu(self, store_id):
         '''
         This method returns the store menu
@@ -205,8 +207,8 @@ class DominosNGClient:
 
 
         resp = json.loads(r.text)
-
-        return resp['OrderID']
+        print(resp)
+        return resp['Order']['OrderID']
 
 
 

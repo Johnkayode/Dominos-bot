@@ -39,7 +39,7 @@ dispatcher = updater.dispatcher
 
 
 
-CONFIRM_ADDRESS, SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES, MENU, SUBMENU = range(6)
+CONFIRM_ADDRESS, SAVE_ADDRESS, ADDRESS_OR_LOCATION, FIND_STORES, MENU, SUBMENU, ADD_TO_CART = range(7)
 
 
 
@@ -314,8 +314,7 @@ def menu(update, context):
     chat_id = update.effective_chat.id
     query = update.callback_query
 
-    user = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
-    context.user_data["user_id"] = user["ref"].id()
+    
 
     query.answer()
     
@@ -382,7 +381,7 @@ def sub_menu(update, context):
                     url = f"https://cache.dominos.com/olo/6_64_5/assets/build/market/NG/_en/images/img/products/larges/{product['ProductCode']}.jpg"
                     reply_markup = InlineKeyboardMarkup([keyboard])
                     context.bot.send_photo(chat_id=chat_id, photo=url, caption=msg, reply_markup=reply_markup)
-
+        return ADD_TO_CART
 
 def add_to_cart(update, context):
     '''
@@ -392,10 +391,15 @@ def add_to_cart(update, context):
     product_code = update.callback_query.data
     store_id = context.user_data['store_id']
     order_type = context.user_data['order_type'] or 'Carryout'
+    
+    try:
+        context.user_data['id']
+    except:
+        context.user_data['id'] = 0
 
     store = client.getStoreDetails(store_id)
-    streetName = store['streetName']
-    city = store['city']
+    streetName = store['StreetName']
+    city = store['City']
 
     try:
         latitude = context.user_data['latitude']
@@ -431,18 +435,20 @@ def add_to_cart(update, context):
 
 
     try:
-        cart = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
+        cart = fauna_client.query(q.get(q.match(q.index("customer_id"), chat_id)))
     except:
         cart = fauna_client.query(q.create(q.collection("cart"), {
             "data": {
-                "id": chat_id,
+                "customer_id": chat_id,
                 "products": [],
                 "order_id" : "",
                 "date": datetime.now(pytz.UTC)
             }
         }))
 
-    cart = cart.data.products
+    ref = cart['ref'].id()
+
+    cart = cart['data']['products']
     new_product = {
             "Code": product_code,
             "Qty": 1,
@@ -457,6 +463,8 @@ def add_to_cart(update, context):
             product['Qty'] += 1
             break
     else:
+        context.user_data['id'] += 1
+        new_product["ID"] = context.user_data['id']
         cart.append(new_product)
 
     
@@ -470,11 +478,10 @@ def add_to_cart(update, context):
                 longitude=longitude, 
                 products=cart,
                 order_type=order_type,
-                options=options
             )
 
     fauna_client.query(q.update(q.ref(
-            q.collection("cart"), context.user_data["user_id"]), 
+            q.collection("cart"), ref), 
             {
                 "data": {
                     "products": cart, 
