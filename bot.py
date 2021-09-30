@@ -49,12 +49,12 @@ def main():
             SUBMENU: [
                 CallbackQueryHandler(sub_menu)
             ],
-            ADD_TO_CART:[
-                CallbackQueryHandler(add_to_cart)
+            ADD_TO_CART: [
+                CallbackQueryHandler(add_to_cart, pattern='addToCart_[A-Z0-9]*')
             ]
         
         },
-        fallbacks=[CommandHandler('cancel', cancel)],
+        fallbacks=[CallbackQueryHandler(sub_menu)],
         allow_reentry=True
     )
 
@@ -82,7 +82,7 @@ def main():
                           url_path=os.getenv("TELEGRAM_BOT_TOKEN"),
                           webhook_url='https://dominos-order-bot.herokuapp.com/' + os.getenv("TELEGRAM_BOT_TOKEN")
                         )
-    
+
     updater.idle()
 
 

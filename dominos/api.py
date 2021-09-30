@@ -1,4 +1,3 @@
-# from . import urls
 from . import urls
 
 import fake_useragent
@@ -264,16 +263,18 @@ class DominosNGClient:
                 }
             }
         }
-        
+        print(payload)
         try:
             r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=10)
         except Exception as e:
             raise e
 
         resp = json.loads(r.text, strict=False)
+        
         return resp
 
-        
+
+
 
 
 

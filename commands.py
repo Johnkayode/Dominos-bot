@@ -356,6 +356,7 @@ def sub_menu(update, context):
     '''
     This function returns a menu for a given category
     '''
+    print("submenu")
     chat_id = update.callback_query.message.chat.id
     choice = update.callback_query.data.split('_')
     if choice[0] == 'CATEGORY':
@@ -374,7 +375,7 @@ def sub_menu(update, context):
                     price = product['Price']
         
                     keyboard = [
-                        InlineKeyboardButton("Add To Cart", callback_data=f"{product['ProductCode']}")
+                        InlineKeyboardButton("Add To Cart", callback_data=f"addToCart_{product['Code']}")
                     ]
 
                     msg = f"{name}\nNGN {price}"
@@ -387,8 +388,10 @@ def add_to_cart(update, context):
     '''
     This function adds an item to the cart or increases its quantity
     '''
+    print("add to cart")
     chat_id = update.callback_query.message.chat.id
-    product_code = update.callback_query.data
+    reply = update.callback_query.data
+    product_code = reply.split("_")[1]
     store_id = context.user_data['store_id']
     order_type = context.user_data['order_type'] or 'Carryout'
     
@@ -528,7 +531,7 @@ def view_cart(update, context):
             latitude = user['data']['latitude']
             longitude = user['data']['longitude']
 
-        cart_summary = client.PriceOrder(
+        cart_summary = client.priceOrder(
                         store_id=store_id, 
                         store_city=city, 
                         store_street=streetName, 
@@ -540,10 +543,11 @@ def view_cart(update, context):
                     )
 
         order_id = f"Order ID: {cart_summary['Order']['OrderID']}\n"
-    
+
         for product in cart_summary['Order']['Products']:
-            cart_item = f"{product['id']}. {product['Name']}\nDescription: {product['descriptions'][0]['value']}"\
-                f"Qty: {product['Qty']}\nAmount: NGN {product['Amount']}"
+            print(product)
+            cart_item = f"{product['ID']}. {product['Name']}  "\
+                f"(x{product['Qty']})\nAmount: NGN {product['Amount']}"
             keyboard = [
                         InlineKeyboardButton("Remove from Cart", callback_data=f"{product['Code']}")
                     ]
@@ -559,11 +563,9 @@ def view_cart(update, context):
                 ]
         reply_markup = InlineKeyboardMarkup([keyboard])
         context.bot.send_message(chat_id=chat_id, text=msg, reply_markup=reply_markup)
-
     except:
-        msg = "Your Cart is empty\n\n/start_order To start order"
+        msg = "Your cart is empty\n\n/start_order To start your order"
         context.bot.send_message(chat_id=chat_id, text=msg)
-
 
 # Control
 def cancel(update, context) -> int: 
