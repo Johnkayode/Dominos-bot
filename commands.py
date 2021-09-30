@@ -508,7 +508,7 @@ def view_cart(update, context):
     View Cart Items
     '''
 
-    chat_id = update.callback_query.message.chat.id
+    chat_id = update.effective_chat.id
     try:
         cart = fauna_client.query(q.get(q.match(q.index("customer_id"), chat_id)))
         orderID = cart['data']['order_id']
