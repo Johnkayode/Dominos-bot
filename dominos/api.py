@@ -185,7 +185,7 @@ class DominosNGClient:
                             "Products": products,
                             "ServiceMethod": order_type,
                             "SourceOrganizationURI": "order.dominos.com",
-                            "StoreID":  store_id, #51819
+                            "StoreID":  store_id,
                             "Tags": {},
                             "Version": "1.0",
                             "NoCombine": True,
@@ -213,7 +213,67 @@ class DominosNGClient:
         resp = json.loads(r.text, strict=False)
         return resp['Order']['OrderID']
 
+    def priceOrder(self, store_id, store_city, store_street, latitude, longitude, products, orderID , order_type):
+        url = urls.URLS['PriceOrder']
 
+        headers = {
+            "DPZ-Language" : "en",
+            "DPZ-Market": "NIGERIA",
+            "DPZ-Source":"DSSPriceOrder",
+            "Host":"order.golo02.dominos.com",
+            "User-Agent": self.user_agent
+        }
+
+        payload = {
+            "Order": {
+                "Address": {
+                    "Coordinates": {
+                        "Latitude": latitude,
+                        "Longitude": longitude
+                    },
+                    "StoreID": store_id,
+                    "City": store_city,
+                    "StreetName": store_street 
+                },
+                "Coupons": [],
+                "CustomerID": "",
+                "Email": "",
+                "Extension": "",
+                "FirstName": "",
+                "LastName": "",
+                "LanguageCode": "en",
+                "OrderChannel": "OLO",
+                "OrderID": orderID,
+                "OrderMethod": "Web",
+                "OrderTaker": None,
+                "Payments": [],
+                "Phone": "",
+                "PhonePrefix": "",
+                "Products": products,
+                "ServiceMethod": order_type,
+                "SourceOrganizationURI": "order.dominos.com",
+                "StoreID": store_id,
+                "Tags": {},
+                "Version": "1.0",
+                "NoCombine": True,
+                "Partners": {},
+                "HotspotsLite": False,
+                "OrderInfoCollection": [],
+                "metaData": {
+                    "orderFunnel": "cart"
+                }
+            }
+        }
+        
+        try:
+            r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=10)
+        except Exception as e:
+            raise e
+
+        resp = json.loads(r.text, strict=False)
+        return resp
+
+        
 
 
 

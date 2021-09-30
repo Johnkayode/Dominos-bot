@@ -4,4 +4,5 @@ URLS = {
     "GetStoreMenu" : "https://order.golo02.dominos.com/power/store/%s/menu",
     "GetStoreDetails" : "https://order.golo02.dominos.com/power/store/%s/profile",
     "AddToCart" : "https://order.golo02.dominos.com/power/validate-order",
+    "PriceOrder" : "https://order.golo02.dominos.com/power/price-order",
 }

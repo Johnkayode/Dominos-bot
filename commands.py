@@ -441,7 +441,9 @@ def add_to_cart(update, context):
             "data": {
                 "customer_id": chat_id,
                 "products": [],
+                "store_id": store_id,
                 "order_id" : "",
+                "order_type": order_type,
                 "date": datetime.now(pytz.UTC)
             }
         }))
@@ -470,38 +472,98 @@ def add_to_cart(update, context):
     
 
     orderID = context.user_data.get('orderID',"")
-    order_id = client.addToCart(
-                store_id=store_id, 
-                store_city=city, 
-                store_street=streetName, 
-                latitude=latitude, 
-                longitude=longitude, 
-                products=cart,
-                orderID=orderID,
-                order_type=order_type,
-            )
 
-    context.user_data['orderID'] = order_id
+    try:
+        order_id = client.addToCart(
+                    store_id=store_id, 
+                    store_city=city, 
+                    store_street=streetName, 
+                    latitude=latitude, 
+                    longitude=longitude, 
+                    products=cart,
+                    orderID=orderID,
+                    order_type=order_type,
+                )
 
-    fauna_client.query(q.update(q.ref(
-            q.collection("cart"), ref), 
-            {
-                "data": {
-                    "products": cart, 
-                    "order_id": order_id
+        context.user_data['orderID'] = order_id
+
+        fauna_client.query(q.update(q.ref(
+                q.collection("cart"), ref), 
+                {
+                    "data": {
+                        "products": cart, 
+                        "order_id": order_id
+                    }
                 }
-            }
-    ))
+        ))
 
-    msg =  f'Product Added\n\nOrder ID: {order_id}'
+        msg =  f'Product Added\n\nSee Your Cart /cart'
+    except:
+        msg = "Something went wrong, try again later."
+
     context.bot.send_message(chat_id=chat_id, text = msg)
-
 
 def view_cart(update, context):
     '''
+    View Cart Items
     '''
 
-    pass
+    chat_id = update.callback_query.message.chat.id
+    try:
+        cart = fauna_client.query(q.get(q.match(q.index("customer_id"), chat_id)))
+        orderID = cart['data']['order_id']
+        store_id = cart['data']['store_id']
+        order_type = cart['data']['order_type']
+        products = cart['data']['products']
+
+        store = client.getStoreDetails(store_id)
+        streetName = store['StreetName']
+        city = store['City']
+
+        try:
+            latitude = context.user_data['latitude']
+            longitude = context.user_data['longitude']
+        except:
+            user = fauna_client.query(q.get(q.match(q.index("id"), chat_id)))
+            latitude = user['data']['latitude']
+            longitude = user['data']['longitude']
+
+        cart_summary = client.PriceOrder(
+                        store_id=store_id, 
+                        store_city=city, 
+                        store_street=streetName, 
+                        latitude=latitude, 
+                        longitude=longitude, 
+                        products=products,
+                        orderID=orderID,
+                        order_type=order_type,
+                    )
+
+        order_id = f"Order ID: {cart_summary['Order']['OrderID']}\n"
+    
+        for product in cart_summary['Order']['Products']:
+            cart_item = f"{product['id']}. {product['Name']}\nDescription: {product['descriptions'][0]['value']}"\
+                f"Qty: {product['Qty']}\nAmount: NGN {product['Amount']}"
+            keyboard = [
+                        InlineKeyboardButton("Remove from Cart", callback_data=f"{product['Code']}")
+                    ]
+            reply_markup = InlineKeyboardMarkup([keyboard])
+            context.bot.send_message(chat_id=chat_id, text=cart_item, reply_markup=reply_markup)
+
+        msg = f"Amount: NGN {cart_summary['Order']['Amounts']['Menu']}\nTax: NGN {cart_summary['Order']['Amounts']['Tax']}\n"\
+            f"Discount: NGN {cart_summary['Order']['Amounts']['Discount']}\n\n"\
+            f"Total: NGN {cart_summary['Order']['Amounts']['Payment']}"
+
+        keyboard = [
+                    InlineKeyboardButton("Checkout", callback_data=f"Checkout_{cart_summary['Order']['OrderID']}")
+                ]
+        reply_markup = InlineKeyboardMarkup([keyboard])
+        context.bot.send_message(chat_id=chat_id, text=msg, reply_markup=reply_markup)
+
+    except:
+        msg = "Your Cart is empty\n\n/start_order To start order"
+        context.bot.send_message(chat_id=chat_id, text=msg)
+
 
 # Control
 def cancel(update, context) -> int: 

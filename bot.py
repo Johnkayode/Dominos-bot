@@ -66,6 +66,7 @@ def main():
     dispatcher.add_handler(address_conv_handler)
     dispatcher.add_handler(order_conv_handler)
     dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("cart", view_cart))
     dispatcher.add_handler(MessageHandler(None, common_message))
     
 
